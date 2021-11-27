@@ -2,21 +2,29 @@ $(document).on("click", "#login-btn", function() {
     login_function();
 });
 
-function login_function() {
-    username = document.getElementById("username");
-    password = document.getElementById("password");
+$(document).on("click", "#sign-up-btn", function() {
+    sign_up_function();
+});
 
-    if (username.value == "") {
-        alert("Please enter valid username");
+function login_function() {
+    var username = document.getElementById("username");
+    var password = document.getElementById("password");
+
+    if (username.value == "" || !validate_email(username.value)) {
+        M.toast({
+            "html": "Please enter valid username"
+        }, 2000);
         return;
     }
     if (password.value == "") {
-        alert("Please enter valid password");
+        M.toast({
+            "html": "Please enter valid password"
+        }, 2000);
         return;
     }
 
-    encrypted_username = EncryptVariable(username.value);
-    encrypted_password = EncryptVariable(password.value)
+    var encrypted_username = EncryptVariable(username.value);
+    var encrypted_password = EncryptVariable(password.value)
 
     var json_string = JSON.stringify({
         username: encrypted_username,
@@ -38,7 +46,13 @@ function login_function() {
             if (response["status"] == 200) {
 
                 M.toast({
-                    "html": "Welcome, " + message["username"]
+                    "html": "Welcome, " + response["username"]
+                }, 2000);
+
+            } else if(response["status"] == 400) {
+
+                M.toast({
+                    "html": response["message"]
                 }, 2000);
 
             } else {
@@ -55,6 +69,74 @@ function login_function() {
     }
     xhttp.send(params);
 
+}
+
+function sign_up_function() {
+
+    var username = document.getElementById("signup-username");
+    var password = document.getElementById("signup-password");
+    var confirm_password = document.getElementById("signup-confirm-password");
+
+    if (username.value == "" || !validate_email(username.value)) {
+        M.toast({
+            "html": "Please enter valid username"
+        }, 2000);
+        return;
+    }
+    if (password.value == "" || confirm_password.value == "") {
+        M.toast({
+            "html": "Please enter valid password"
+        }, 2000);
+        return;
+    }
+    if(password.value != confirm_password.value) {
+        M.toast({
+            "html": "Password not matching"
+        }, 2000);
+        return;
+    }
+
+    var encrypted_username = EncryptVariable(username.value);
+    var encrypted_password = EncryptVariable(password.value);
+    var encrypted_confirm_password = EncryptVariable(confirm_password.value);
+
+    var json_string = JSON.stringify({
+        username: encrypted_username,
+        password: encrypted_password,
+        confirm_password: encrypted_confirm_password,
+    })
+    json_string = EncryptVariable(json_string);
+    json_string = encodeURIComponent(json_string);
+
+    var xhttp = new XMLHttpRequest();
+    var params = 'json_string=' + json_string
+    xhttp.open("POST", "/task/create-user/", false);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = JSON.parse(this.responseText);
+            response = custom_decrypt(response)
+            response = JSON.parse(response);
+
+            if (response["status"] == 200) {
+
+                setTimeout(function() {
+                    window.location = "/task/login/";
+                }, 2000);
+
+                M.toast({
+                    "html": "User created Successfully! Please Login!"
+                }, 2000);
+
+            } else {
+
+                M.toast({
+                    "html": response["message"]
+                }, 2000);
+            }
+        }
+    }
+    xhttp.send(params);
 }
 
 /////////////////////////////// Encryption And Decription //////////////////////////
@@ -101,6 +183,20 @@ function custom_decrypt(msg_string) {
         iv: CryptoJS.enc.Base64.parse(payload[2])
     });
     return decrypted.toString(CryptoJS.enc.Utf8);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////// Utility Functions //////////////////////////
+
+function validate_email(email_id) {
+    var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+    if (regex.test(email_id)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

@@ -148,6 +148,7 @@ function add_task() {
     var task_deadline = document.getElementById("task-deadline").value;
     var task_priority = document.getElementById("task-priority").value;
     var is_task_complete = document.getElementById("is-task-complete").checked;
+    var bucket_id = document.getElementById("task-bucket").value;
 
     if(task_name == "") {
         M.toast({
@@ -161,6 +162,7 @@ function add_task() {
         task_deadline: task_deadline,
         task_priority: task_priority,
         is_task_complete: is_task_complete,
+        bucket_id: bucket_id, 
     })
     json_string = EncryptVariable(json_string);
     json_string = encodeURIComponent(json_string);
@@ -199,6 +201,7 @@ function edit_task(task_id) {
     var task_deadline = document.getElementById("task-deadline-"+task_id).value;
     var task_priority = document.getElementById("task-priority-"+task_id).value;
     var is_task_complete = document.getElementById("is-task-complete-"+task_id).checked;
+    var bucket_id = document.getElementById("task-bucket-"+task_id).value;
 
     if(task_name == "") {
         M.toast({
@@ -213,6 +216,7 @@ function edit_task(task_id) {
         task_deadline: task_deadline,
         task_priority: task_priority,
         is_task_complete: is_task_complete,
+        bucket_id: bucket_id, 
     })
     json_string = EncryptVariable(json_string);
     json_string = encodeURIComponent(json_string);
@@ -278,6 +282,51 @@ function delete_task(task_id) {
         }
     }
     xhttp.send(params);
+
+}
+
+function create_bucket() {
+
+    var bucket_name = document.getElementById("bucket-name").value;
+
+    if(bucket_name == "") {
+        M.toast({
+            "html": "Please enter bucket name"
+        }, 2000);
+        return;        
+    }
+
+    var json_string = JSON.stringify({
+        bucket_name: bucket_name,
+    })
+    json_string = EncryptVariable(json_string);
+    json_string = encodeURIComponent(json_string);
+
+    var xhttp = new XMLHttpRequest();
+    var params = 'json_string=' + json_string
+    xhttp.open("POST", "/task/create-bucket/", false);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = JSON.parse(this.responseText);
+            response = custom_decrypt(response)
+            response = JSON.parse(response);
+
+            if (response["status"] == 200) {
+
+                setTimeout(function() {
+                    window.location = "/task/home/";
+                }, 2000);
+
+                alert("Bucket Created Successfully");
+
+            } else {
+
+                alert(response["message"]);
+            }
+        }
+    }
+    xhttp.send(params);   
 
 }
 

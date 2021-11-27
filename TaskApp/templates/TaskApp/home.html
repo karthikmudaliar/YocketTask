@@ -5,9 +5,18 @@
 
 <div class="row" style="margin-left:2%; top: 5%;">
 
-      <div class="col s12">
-          <a href="#add-task-modal" data-target="#add-task-modal" data-toggle="modal" ><button id="add-task-btn">Add Task</button></a>
+      <div class="col s4">
+          <a href="#add-task-modal" data-target="#add-task-modal" data-toggle="modal" ><button type="button" id="add-task-btn">Add Task</button></a>
       </div>
+
+      <div class="col s4">
+          <a href="#create-bucket" data-target="#create-bucket" data-toggle="modal" ><button type="button" id="create-bucket-btn">Create Bucket</button></a>
+      </div>
+
+      <div class="col s4">
+          <a href="/task/logout/" ><button type="button" id="logout-btn">Logout</button></a>
+      </div>
+
 </div>
 
 <div class="col s12" style="margin-left:1%;">
@@ -23,6 +32,7 @@
               <th><b>Task Priority</b></th>
               <th><b>Completed?</b></th>
               <th><b>Task Status</b></th>
+              <th><b>Bucket</b></th>
               <th><b>Edit</b></th>
               <th class="center" style="width:10%;"><strong><span style="color: black;"><b>Delete</b></span></strong></th>
             </tr>
@@ -53,6 +63,19 @@
                       {% endif %}
                     </b>
                 </td>
+                <td class="bg-success"> 
+                  <b>
+                    {% if task_obj.task_bucket %}
+
+                    {{ task_obj.task_bucket.name }}
+
+                    {% else %}
+
+                    N/A
+
+                    {% endif %} 
+                  </b>
+                </td>
                 <td>
                   <a href="#edit-task-modal-{{ task_obj.pk }}" data-target="#edit-task-modal-{{ task_obj.pk }}" data-toggle="modal" class="modal-trigger green-text text-darken-2 form-assist-edit-tag-btn"><i class="material-icons">edit</i></a>
                 </td>
@@ -79,7 +102,7 @@
                                 <div style="float: right;">
                                     <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
                                     <button class="btn-primary" type="button" id="edit-agent-btn"
-                                        onclick="delete_task('{{ task_obj.pk }}')">Save Changes</button>
+                                        onclick="delete_task('{{ task_obj.pk }}')">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -108,7 +131,7 @@
                                     </div>
                                     <div class="col-12 mb-4">
                                         <label>Task Priority</label>
-                                        <select class="form-control select-dropdown-icon livechat-agent-category-edit"
+                                        <select class="form-control select-dropdown-icon"
                                             id="task-priority-{{ task_obj.pk }}" value="{{ task_obj.priority }}">
                                           <option selected hidden value="hidden">Select Priority</option>
                                           <option value="Low" {% if task_obj.priority == "Low" %} selected {% endif %}>Low</option>
@@ -122,6 +145,22 @@
                                             <br>
                                             <input type="checkbox" id="is-task-complete-{{ task_obj.pk }}" {% if task_obj.is_complete %} checked {% endif %} >
                                     </div>
+                                    <div class="col-12 mb-4">
+                                        <label>Bucket</label>
+                                        <select class="form-control select-dropdown-icon"
+                                            id="task-bucket-{{ task_obj.pk }}">
+                                          <option selected hidden value="">Select Bucket</option>
+
+                                          {% for bucket_obj in bucket_objs %}
+                                            {% if task_obj.task_bucket == bucket_obj %}
+                                          <option value="{{ bucket_obj.pk }}" selected>{{ bucket_obj.name }}</option>
+                                            {% else %}
+                                          <option value="{{ bucket_obj.pk }}">{{ bucket_obj.name }}</option>
+                                            {% endif %}
+                                          {% endfor %}
+                                        </select>
+                                    </div>
+
 
                                 </div>
                             </div>
@@ -206,6 +245,17 @@
                             <input type="checkbox" id="is-task-complete">
                     </div>
 
+                    <div class="col-12 mb-4">
+                        <label>Bucket</label>
+                        <select class="form-control select-dropdown-icon"
+                            id="task-bucket">
+                          <option selected hidden value="">Select Bucket</option>
+                          {% for bucket_obj in bucket_objs %}
+                          <option value="{{ bucket_obj.pk }}">{{ bucket_obj.name }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+
                 </div>
             </div>
 
@@ -215,6 +265,36 @@
                     <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
                     <button class="btn-primary" type="button"
                         onclick="add_task()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure for create bucket -->
+
+<div class="modal backdrop fade bd-example-modal-lg" id="create-bucket" tabindex="-1"
+    aria-labelledby="Admin_manage_user_edit_user_modal_label" aria-modal="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6>Create Bucket</h6>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <label>Bucket Name</label>
+                        <input type="text" id="bucket-name" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #e3e6f0;">
+
+                <div style="float: right;">
+                    <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
+                    <button class="btn-primary" type="button" id="edit-agent-btn"
+                        onclick="create_bucket()">Create</button>
                 </div>
             </div>
         </div>

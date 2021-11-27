@@ -5,7 +5,7 @@ from django.shortcuts import render, HttpResponseRedirect, HttpResponse
 from django.conf import settings
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from TaskApp.utils import *
 from TaskApp.utils_validation import InputValidation
@@ -30,14 +30,27 @@ def SignUp(request):
     return render(request, 'TaskApp/sign_up.html')
 
 
-def Home(request):  # noqa: N802
+def Home(request):
     try:
-        print(request.user.is_authenticated)
         if request.user.is_authenticated:
+            task_objs = []
+            
+            high_task_objs = Task.objects.filter(is_deleted=False, priority="High")
+            for high_task_obj in high_task_objs:
+                task_objs.append(high_task_obj)
 
-            task_objs = Task.objects.filter(is_deleted=False)
+            medium_task_objs = Task.objects.filter(is_deleted=False, priority="Medium")
+            for medium_task_obj in medium_task_objs:
+                task_objs.append(medium_task_obj) 
+
+            low_task_objs = Task.objects.filter(is_deleted=False, priority="Low")
+            for low_task_obj in low_task_objs:
+                task_objs.append(low_task_obj)
+
+            bucket_objs = Bucket.objects.all()           
+
             today_date = datetime.date.today().strftime('%Y-%m-%d')
-            return render(request, "TaskApp/home.html", {"task_objs": task_objs, "today_date": today_date})
+            return render(request, "TaskApp/home.html", {"task_objs": task_objs, "today_date": today_date, "bucket_objs": bucket_objs})
         else:
             return HttpResponseRedirect("/task/login")
     except Exception as e:  # noqa: F841
@@ -57,7 +70,6 @@ class LoginSubmitAPI(APIView):
         response = {}
         response['status'] = 500
         response["message"] = "Internal Server Error"
-        temp_user = None
         try:
             import urllib.parse
             data = urllib.parse.unquote(request.data['json_string'])
@@ -90,7 +102,7 @@ class LoginSubmitAPI(APIView):
             user = authenticate(username=username, password=password)
 
             if user is not None:
-                user.is_authenticated = True
+                login(request, user)
                 response["status"] = 200
                 response["username"] = username
                 response["message"] = "Success"
@@ -111,6 +123,20 @@ class LoginSubmitAPI(APIView):
 LoginSubmit = LoginSubmitAPI.as_view()
 
 
+def Logout(request):
+    print("++++++++")
+    try:
+        print(request)
+        if request.user.is_authenticated:
+            logout(request)
+
+    except Exception as e:  # noqa: F841
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        logger.error("Logout %s at %s",
+                     str(e), str(exc_tb.tb_lineno), extra={'AppName': 'TaskApp'})
+    return HttpResponseRedirect("/task/login")
+
+
 class CreateUserAPI(APIView):
 
     authentication_classes = (
@@ -121,7 +147,6 @@ class CreateUserAPI(APIView):
         response = {}
         response['status'] = 500
         response["message"] = "Internal Server Error"
-        temp_user = None
         try:
             import urllib.parse
             data = urllib.parse.unquote(request.data['json_string'])
@@ -189,7 +214,6 @@ class AddTaskAPI(APIView):
         response = {}
         response['status'] = 500
         response["message"] = "Internal Server Error"
-        temp_user = None
         try:
             import urllib.parse
             data = urllib.parse.unquote(request.data['json_string'])
@@ -201,6 +225,7 @@ class AddTaskAPI(APIView):
             task_deadline = data['task_deadline']
             task_priority = data['task_priority']
             is_task_complete = data['is_task_complete']
+            bucket_id = data["bucket_id"]
 
             if task_name.strip() == "":
                 response["status"] = 400
@@ -209,7 +234,12 @@ class AddTaskAPI(APIView):
                 response = custom_encrypt_obj.encrypt(json.dumps(response))
                 return Response(data=response)
 
-            Task.objects.create(name=task_name, deadline=task_deadline, priority=task_priority, is_complete=is_task_complete)
+            task_obj = Task.objects.create(name=task_name, deadline=task_deadline, priority=task_priority, is_complete=is_task_complete)
+
+            if bucket_id != "":
+                bucket_obj = Bucket.objects.get(pk=bucket_id)
+                task_obj.task_bucket = bucket_obj
+                task_obj.save()
 
             response["status"] = 200
             response["message"] = "Success"
@@ -237,7 +267,6 @@ class EditTaskAPI(APIView):
         response = {}
         response['status'] = 500
         response["message"] = "Internal Server Error"
-        temp_user = None
         try:
             import urllib.parse
             data = urllib.parse.unquote(request.data['json_string'])
@@ -250,6 +279,7 @@ class EditTaskAPI(APIView):
             task_deadline = data['task_deadline']
             task_priority = data['task_priority']
             is_task_complete = data['is_task_complete']
+            bucket_id = data["bucket_id"]
 
             if task_name.strip() == "":
                 response["status"] = 400
@@ -263,6 +293,11 @@ class EditTaskAPI(APIView):
             task_obj.deadline = task_deadline
             task_obj.priority = task_priority
             task_obj.is_complete = is_task_complete
+
+            if bucket_id != "":
+                bucket_obj = Bucket.objects.get(pk=bucket_id)
+                task_obj.task_bucket = bucket_obj
+
             task_obj.save()
 
             response["status"] = 200
@@ -291,7 +326,6 @@ class DeleteTaskAPI(APIView):
         response = {}
         response['status'] = 500
         response["message"] = "Internal Server Error"
-        temp_user = None
         try:
             import urllib.parse
             data = urllib.parse.unquote(request.data['json_string'])
@@ -319,3 +353,48 @@ class DeleteTaskAPI(APIView):
 
 
 DeleteTask = DeleteTaskAPI.as_view()
+
+
+class CreateBucketAPI(APIView):
+
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def post(self, request, *args, **kwargs):
+
+        response = {}
+        response['status'] = 500
+        response["message"] = "Internal Server Error"
+        temp_user = None
+        try:
+            import urllib.parse
+            data = urllib.parse.unquote(request.data['json_string'])
+
+            data = DecryptVariable(data)
+            data = json.loads(data)
+
+            bucket_name = data['bucket_name']
+
+            if bucket_name.strip() == "":
+                response["status"] = 400
+                response["message"] = "Please enter bucket name"
+                custom_encrypt_obj = CustomEncrypt()
+                response = custom_encrypt_obj.encrypt(json.dumps(response))
+                return Response(data=response)
+
+            Bucket.objects.create(name=bucket_name)
+
+            response["status"] = 200
+            response["message"] = "Success"
+
+        except Exception as e:  # noqa: F841
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logger.error("CreateBucketAPI %s at %s",
+                         str(e), str(exc_tb.tb_lineno), extra={'AppName': 'TaskApp'})
+
+        custom_encrypt_obj = CustomEncrypt()
+        response = custom_encrypt_obj.encrypt(json.dumps(response))
+        return Response(data=response)
+
+
+CreateBucket = CreateBucketAPI.as_view()

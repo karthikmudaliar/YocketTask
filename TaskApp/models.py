@@ -20,19 +20,25 @@ class Task(models.Model):
 
 	is_complete = models.BooleanField(default=False, help_text="Designates whether task is completed or not")
 
-	TASK_STATUS = (
-	    ('Overdue', 'Overdue'),
-	    ('Upcoming', 'Upcoming'),
-	    ('Today', 'Today'),
-	)
-
-	status = models.CharField(default="Upcoming", max_length=10, choices=TASK_STATUS, help_text="Task Status")
-
 	is_deleted = models.BooleanField(default=False, help_text="Designates whether task is deleted or not")
 
+	task_bucket = models.ForeignKey('TaskApp.Bucket', null=True, blank=True, on_delete=models.SET_NULL)
+	
 	class Meta:
 	    verbose_name = "Task"
 	    verbose_name_plural = "Task"
+
+	def __str__(self):
+		return str(self.name)
+
+
+class Bucket(models.Model):
+
+	name = models.CharField(max_length=100, help_text="Bucket name")
+
+	class Meta:
+	    verbose_name = "Bucket"
+	    verbose_name_plural = "Bucket"
 
 	def __str__(self):
 		return str(self.name)

@@ -13,5 +13,5 @@ Installation Instructions:
 - python manage.py makemigrations
 - python manage.py migrate
 4. Run server
-- python manage.py makemigrations
+- python manage.py runserver
 - URL(http://localhost:port/task/home/)

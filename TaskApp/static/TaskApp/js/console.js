@@ -44,6 +44,9 @@ function login_function() {
             response = JSON.parse(response);
 
             if (response["status"] == 200) {
+                setTimeout(function() {
+                    window.location = "/task/home/";
+                }, 2000);
 
                 M.toast({
                     "html": "Welcome, " + response["username"]
@@ -137,6 +140,149 @@ function sign_up_function() {
         }
     }
     xhttp.send(params);
+}
+
+function add_task() {
+
+    var task_name = document.getElementById("task-name").value;
+    var task_deadline = document.getElementById("task-deadline").value;
+    var task_priority = document.getElementById("task-priority").value;
+    var is_task_complete = document.getElementById("is-task-complete").checked;
+
+    if(task_name == "") {
+        M.toast({
+            "html": "Please enter task name"
+        }, 2000);
+        return;        
+    }
+
+    var json_string = JSON.stringify({
+        task_name: task_name,
+        task_deadline: task_deadline,
+        task_priority: task_priority,
+        is_task_complete: is_task_complete,
+    })
+    json_string = EncryptVariable(json_string);
+    json_string = encodeURIComponent(json_string);
+
+    var xhttp = new XMLHttpRequest();
+    var params = 'json_string=' + json_string
+    xhttp.open("POST", "/task/add-task/", false);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = JSON.parse(this.responseText);
+            response = custom_decrypt(response)
+            response = JSON.parse(response);
+
+            if (response["status"] == 200) {
+
+                setTimeout(function() {
+                    window.location = "/task/home/";
+                }, 2000);
+
+                alert("Task created Successfully");
+
+            } else {
+
+                alert(response["message"]);
+            }
+        }
+    }
+    xhttp.send(params);
+
+}
+
+function edit_task(task_id) {
+
+    var task_name = document.getElementById("task-name-"+task_id).value;
+    var task_deadline = document.getElementById("task-deadline-"+task_id).value;
+    var task_priority = document.getElementById("task-priority-"+task_id).value;
+    var is_task_complete = document.getElementById("is-task-complete-"+task_id).checked;
+
+    if(task_name == "") {
+        M.toast({
+            "html": "Please enter task name"
+        }, 2000);
+        return;        
+    }
+
+    var json_string = JSON.stringify({
+        task_id: task_id,
+        task_name: task_name,
+        task_deadline: task_deadline,
+        task_priority: task_priority,
+        is_task_complete: is_task_complete,
+    })
+    json_string = EncryptVariable(json_string);
+    json_string = encodeURIComponent(json_string);
+
+    var xhttp = new XMLHttpRequest();
+    var params = 'json_string=' + json_string
+    xhttp.open("POST", "/task/edit-task/", false);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = JSON.parse(this.responseText);
+            response = custom_decrypt(response)
+            response = JSON.parse(response);
+
+            if (response["status"] == 200) {
+
+                setTimeout(function() {
+                    window.location = "/task/home/";
+                }, 2000);
+
+                alert("Task Edited Successfully");
+
+            } else {
+
+                alert(response["message"]);
+            }
+        }
+    }
+    xhttp.send(params);
+
+}
+
+function delete_task(task_id) {
+
+    var json_string = JSON.stringify({
+        task_id: task_id,
+    })
+    json_string = EncryptVariable(json_string);
+    json_string = encodeURIComponent(json_string);
+
+    var xhttp = new XMLHttpRequest();
+    var params = 'json_string=' + json_string
+    xhttp.open("POST", "/task/delete-task/", false);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = JSON.parse(this.responseText);
+            response = custom_decrypt(response)
+            response = JSON.parse(response);
+
+            if (response["status"] == 200) {
+
+                setTimeout(function() {
+                    window.location = "/task/home/";
+                }, 2000);
+
+                alert("Task Deleted Successfully");
+
+            } else {
+
+                alert(response["message"]);
+            }
+        }
+    }
+    xhttp.send(params);
+
+}
+
+function open_add_task_modal() {
+    $("#add-task-modal").modal('open');
 }
 
 /////////////////////////////// Encryption And Decription //////////////////////////

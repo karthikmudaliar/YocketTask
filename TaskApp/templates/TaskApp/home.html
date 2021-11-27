@@ -1,0 +1,224 @@
+{% extends 'TaskApp/base.html' %}
+{% block content %}
+{% load static %}
+{% load custom_filters %}
+
+<div class="row" style="margin-left:2%; top: 5%;">
+
+      <div class="col s12">
+          <a href="#add-task-modal" data-target="#add-task-modal" data-toggle="modal" ><button id="add-task-btn">Add Task</button></a>
+      </div>
+</div>
+
+<div class="col s12" style="margin-left:1%;">
+
+
+      {% if task_objs %}
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th><b>Task Name</b></th>
+              <th><b>Task Deadline</b></th>
+              <th><b>Task Priority</b></th>
+              <th><b>Completed?</b></th>
+              <th><b>Task Status</b></th>
+              <th><b>Edit</b></th>
+              <th class="center" style="width:10%;"><strong><span style="color: black;"><b>Delete</b></span></strong></th>
+            </tr>
+            
+          </thead>
+          <tbody>
+            
+            {% for task_obj in task_objs %}
+
+              <tr>
+                <td>{{ task_obj.name }}</td>
+                <td> {{ task_obj.deadline }} </td>
+                <td> {{ task_obj.priority }} </td>
+                <td> {% if task_obj.is_complete %} 
+                      Yes
+	                   {% else %} 
+                      No
+	             	     {% endif %} 
+             	  </td>
+                <td class="bg-info"> 
+                    <b>
+                      {% if task_obj.is_complete %} 
+                        - 
+                      {% else %}
+
+                        {{ task_obj.deadline|check_task_status }}
+
+                      {% endif %}
+                    </b>
+                </td>
+                <td>
+                  <a href="#edit-task-modal-{{ task_obj.pk }}" data-target="#edit-task-modal-{{ task_obj.pk }}" data-toggle="modal" class="modal-trigger green-text text-darken-2 form-assist-edit-tag-btn"><i class="material-icons">edit</i></a>
+                </td>
+                <td style="width:10%;" class="center">
+                  <a class="red-text text-darken-3 modal-trigger" href="#delete-task-modal-{{ task_obj.pk }}" data-target="#delete-task-modal-{{ task_obj.pk }}" data-toggle="modal"><i class="material-icons">delete</i></a>
+                </td>
+              </tr>
+
+              <!-- Modal Structure for delete task -->
+
+                <div class="modal backdrop fade bd-example-modal-lg" id="delete-task-modal-{{ task_obj.pk }}" tabindex="-1"
+                    aria-labelledby="Admin_manage_user_edit_user_modal_label" aria-modal="true" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h6>Delete Task</h6>
+                            </div>
+                            <div class="modal-body">
+                              Are you sure you want to delete this task ?
+                            </div>
+                
+                            <div class="modal-footer" style="border-top: 1px solid #e3e6f0;">
+                
+                                <div style="float: right;">
+                                    <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
+                                    <button class="btn-primary" type="button" id="edit-agent-btn"
+                                        onclick="delete_task('{{ task_obj.pk }}')">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+              <!-- Modal Structure for edit task -->
+
+                <div class="modal backdrop fade bd-example-modal-lg" id="edit-task-modal-{{ task_obj.pk }}" tabindex="-1"
+                    aria-labelledby="Admin_manage_user_edit_user_modal_label" aria-modal="true" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h6>Edit Task</h6>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-12 mb-4">
+                                        <label>Task Name</label>
+                                        <input type="text" id="task-name-{{ task_obj.pk }}" value="{{ task_obj.name }}" class="form-control">
+                                    </div>
+                                    <div class="col-6 mb-4">
+                                        <label>Task Deadline</label>
+                                        <input type="date" id="task-deadline-{{ task_obj.pk }}" value="{{ task_obj.deadline|date:'Y-m-d' }}" class="form-control">
+                                    </div>
+                                    <div class="col-12 mb-4">
+                                        <label>Task Priority</label>
+                                        <select class="form-control select-dropdown-icon livechat-agent-category-edit"
+                                            id="task-priority-{{ task_obj.pk }}" value="{{ task_obj.priority }}">
+                                          <option selected hidden value="hidden">Select Priority</option>
+                                          <option value="Low" {% if task_obj.priority == "Low" %} selected {% endif %}>Low</option>
+                                          <option value="Medium" {% if task_obj.priority == "Medium" %} selected {% endif %}>Medium</option>
+                                          <option value="High" {% if task_obj.priority == "High" %} selected {% endif %}>High</option>
+                                            
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mb-4">
+                                        <label>Is Task Completed ? </label>
+                                            <br>
+                                            <input type="checkbox" id="is-task-complete-{{ task_obj.pk }}" {% if task_obj.is_complete %} checked {% endif %} >
+                                    </div>
+
+                                </div>
+                            </div>
+                
+                            <div class="modal-footer" style="border-top: 1px solid #e3e6f0;">
+                
+                                <div style="float: right;">
+                                    <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
+                                    <button class="btn-primary" type="button" id="edit-agent-btn"
+                                        onclick="edit_task('{{ task_obj.pk }}')">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            {% endfor %}
+
+
+          </tbody>
+        </table>
+
+      {% else %}
+
+        <div class="col s12" style="padding:1em;">
+          <div class="row">
+            <div class="col s12">
+              <p class="center">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19.8229 39.9998C19.6045 39.9998 19.3912 39.9132 19.2329 39.7565C19.0362 39.5598 18.9495 39.2765 19.0045 39.0048L20.1829 33.1132C20.2162 32.9498 20.2929 32.8015 20.4112 32.6865L33.3745 19.7232C34.3479 18.7498 35.9362 18.7498 36.9095 19.7232L39.2662 22.0798C40.2412 23.0548 40.2412 24.6398 39.2662 25.6148L26.3029 38.5782C26.1879 38.6948 26.0395 38.7732 25.8762 38.8065L19.9845 39.9848C19.9312 39.9948 19.8762 39.9998 19.8229 39.9998ZM21.7695 33.6848L20.8862 38.1032L25.3045 37.2198L38.0895 24.4348C38.4145 24.1098 38.4145 23.5815 38.0895 23.2565L35.7329 20.8998C35.4079 20.5748 34.8795 20.5748 34.5545 20.8998L21.7695 33.6848ZM25.7145 37.9882H25.7312H25.7145Z" fill="#7B7A7B"/>
+                      <path d="M15.8333 35H4.16667C1.86833 35 0 33.1317 0 30.8333V9.16667C0 6.86833 1.86833 5 4.16667 5H7.5C7.96 5 8.33333 5.37333 8.33333 5.83333C8.33333 6.29333 7.96 6.66667 7.5 6.66667H4.16667C2.78833 6.66667 1.66667 7.78833 1.66667 9.16667V30.8333C1.66667 32.2117 2.78833 33.3333 4.16667 33.3333H15.8333C16.2933 33.3333 16.6667 33.7067 16.6667 34.1667C16.6667 34.6267 16.2933 35 15.8333 35Z" fill="#7B7A7B"/>
+                      <path d="M27.5 20C27.04 20 26.6667 19.6267 26.6667 19.1667V9.16667C26.6667 7.78833 25.545 6.66667 24.1667 6.66667H20.8333C20.3733 6.66667 20 6.29333 20 5.83333C20 5.37333 20.3733 5 20.8333 5H24.1667C26.465 5 28.3333 6.86833 28.3333 9.16667V19.1667C28.3333 19.6267 27.96 20 27.5 20Z" fill="#7B7A7B"/>
+                      <path d="M19.166 10H9.16602C7.78768 10 6.66602 8.87833 6.66602 7.5V4.16667C6.66602 3.70667 7.03935 3.33333 7.49935 3.33333H10.0827C10.4694 1.43333 12.1544 0 14.166 0C16.1777 0 17.8627 1.43333 18.2494 3.33333H20.8327C21.2927 3.33333 21.666 3.70667 21.666 4.16667V7.5C21.666 8.87833 20.5444 10 19.166 10ZM8.33268 5V7.5C8.33268 7.95833 8.70769 8.33333 9.16602 8.33333H19.166C19.6244 8.33333 19.9994 7.95833 19.9994 7.5V5H17.4994C17.0394 5 16.666 4.62667 16.666 4.16667C16.666 2.78833 15.5444 1.66667 14.166 1.66667C12.7877 1.66667 11.666 2.78833 11.666 4.16667C11.666 4.62667 11.2927 5 10.8327 5H8.33268Z" fill="#7B7A7B"/>
+                      <path d="M22.5 14.9997H5.83333C5.37333 14.9997 5 14.6263 5 14.1663C5 13.7063 5.37333 13.333 5.83333 13.333H22.5C22.96 13.333 23.3333 13.7063 23.3333 14.1663C23.3333 14.6263 22.96 14.9997 22.5 14.9997Z" fill="#7B7A7B"/>
+                      <path d="M22.5 19.9997H5.83333C5.37333 19.9997 5 19.6263 5 19.1663C5 18.7063 5.37333 18.333 5.83333 18.333H22.5C22.96 18.333 23.3333 18.7063 23.3333 19.1663C23.3333 19.6263 22.96 19.9997 22.5 19.9997Z" fill="#7B7A7B"/>
+                      <path d="M22.5 24.9997H5.83333C5.37333 24.9997 5 24.6263 5 24.1663C5 23.7063 5.37333 23.333 5.83333 23.333H22.5C22.96 23.333 23.3333 23.7063 23.3333 24.1663C23.3333 24.6263 22.96 24.9997 22.5 24.9997Z" fill="#7B7A7B"/>
+                  </svg> No existing tasks found. Kindly create one
+              </p>
+            </div>
+          </div>
+        </div>
+
+      {% endif %}
+
+</div>
+
+
+<!-- Modal Structure for add task -->
+
+<div class="modal backdrop fade bd-example-modal-lg" id="add-task-modal" tabindex="-1"
+    aria-labelledby="Admin_manage_user_edit_user_modal_label" aria-modal="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6>Add Task</h6>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <label>Task Name</label>
+                        <input type="text" id="task-name" class="form-control">
+                    </div>
+                    <div class="col-6 mb-4">
+                        <label>Task Deadline</label>
+                        <input type="date" id="task-deadline" class="form-control" value="{{ today_date }}">
+                    </div>
+                    <div class="col-12 mb-4">
+                        <label>Task Priority</label>
+                        <select class="form-control select-dropdown-icon livechat-agent-category-edit"
+                            id="task-priority" >
+                         <!--  <option selected hidden value="hidden">Select Priority</option> -->
+                          <option value="Low">Low</option>
+                          <option value="Medium">Medium</option>
+                          <option value="High" selected>High</option>
+                            
+                        </select>
+                    </div>
+                    <div class="col-12 mb-4">
+                        <label>Is Task Completed ? </label>
+                            <br>
+                            <input type="checkbox" id="is-task-complete">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #e3e6f0;">
+
+                <div style="float: right;">
+                    <button class="btn-close" type="button" data-dismiss="modal">Cancel</button>
+                    <button class="btn-primary" type="button"
+                        onclick="add_task()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

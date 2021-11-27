@@ -124,9 +124,7 @@ LoginSubmit = LoginSubmitAPI.as_view()
 
 
 def Logout(request):
-    print("++++++++")
     try:
-        print(request)
         if request.user.is_authenticated:
             logout(request)
 

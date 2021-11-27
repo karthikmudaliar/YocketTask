@@ -9,7 +9,6 @@ urlpatterns = [
 	url(r'^create-user/', views.CreateUser),
 
 	# Task CRUD APIs
-	url(r'^', views.Home),
 	url(r'^home/', views.Home),
 	url(r'^add-task/', views.AddTask),
 	url(r'^edit-task/', views.EditTask),

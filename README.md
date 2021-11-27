@@ -9,3 +9,9 @@ Installation Instructions:
 - source env/bin/activate
 2. Install the dependencies.
 - python -m pip install -r requirements.txt
+3. Create Database
+- python manage.py makemigrations
+- python manage.py migrate
+4. Run server
+- python manage.py makemigrations
+- URL(http://localhost:port/task/home/)

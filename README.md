@@ -15,3 +15,12 @@ Installation Instructions:
 4. Run server
 - python manage.py runserver
 - URL(http://localhost:port/task/home/)
+
+Features:
+1. Login/Signup Module.
+2. User can create/edit/delete task, assign priority, assign deadline, mark it as complete/incomplete. 
+3. Tasks will be categorized into upcoming/overdue/today.
+4. Buckets can be created and tasks can be assigned to buckets.
+5. API based, have enryption decryption while making API calls. 
+6. Frontend and backend validations done. 
+7. Exception handling, and error loggers implemented. 
